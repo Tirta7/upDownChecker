@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Website Status Checker</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous" />
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1 class="mb-4">Up Down</h1>
+      <div class="row row-cols-1 row-cols-md-5 g-4">
+        {% for website in websites %}
+        <div class="col">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">{{ website }}</h5>
+              <p class="card-text" id="{{ website }}">Loading...</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS (Popper.js + Bootstrap JS) -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"></script>
+
+    <!-- JavaScript to update website status in real-time -->
+    <script>
+      const eventSource = new EventSource("/stream");
+
+      eventSource.onmessage = function (event) {
+        const websiteStatus = JSON.parse(event.data);
+        updateWebsiteStatus(websiteStatus);
+      };
+
+      function updateWebsiteStatus(websiteStatus) {
+        for (const [url, status] of Object.entries(websiteStatus)) {
+          const statusElement = document.getElementById(url);
+          if (statusElement) {
+            statusElement.textContent = status;
+            statusElement.classList.remove(
+              "text-primary",
+              "text-success",
+              "text-danger"
+            ); // Remove existing classes
+            switch (status.toLowerCase()) {
+              case "up":
+                statusElement.classList.add("text-success");
+                break;
+              case "down":
+                statusElement.classList.add("text-danger");
+                break;
+              case "unknown":
+                statusElement.classList.add("text-primary");
+                break;
+              default:
+                // If status is neither Up, Down, nor Unknown
+                statusElement.classList.add("text-primary");
+                break;
+            }
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
